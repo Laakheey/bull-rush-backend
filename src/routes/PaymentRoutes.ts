@@ -9,5 +9,9 @@ router.get('/', verifyPayment1);
 router.post('/initiate', clerkMiddleware, initiatePayment);
 router.post('/verify', clerkMiddleware, verifyPayment);
 
+router.get("/test", (req, res) => {
+  res.json({ msg: "Router is definitely connected" });
+});
+
 
 export default router;
