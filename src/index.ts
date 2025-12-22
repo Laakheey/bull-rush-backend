@@ -16,7 +16,7 @@ app.get("/api/health", async (req: Request, res: Response) => {
   res.send({ message: "Health OK! from /api/health" });
 });
 
-app.use("/api/payment", paymentRoute);
+app.use("api/payment", paymentRoute);
 
 
 app.listen(PORT, () => {
