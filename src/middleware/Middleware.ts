@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { clerkClient } from "@clerk/clerk-sdk-node";
+import { supabase } from "../config/supabase";
 
 declare global {
   namespace Express {
@@ -40,5 +41,43 @@ export const clerkMiddleware = async (
   } catch (error: any) {
     console.error("❌ Token verification failed:", error.message);
     return res.status(401).json({ error: "Invalid token", details: error.message });
+  }
+};
+
+
+export const adminOnly = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const userId = req.auth?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("is_admin, is_active")
+      .eq("id", userId)
+      .single();
+
+    if (error || !user) {
+      return res.status(404).json({ error: "User profile not found" });
+    }
+
+    if (!user.is_active) {
+      return res.status(403).json({ error: "Your account is suspended." });
+    }
+
+    if (!user.is_admin) {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
+
+    // If all checks pass, move to the next function
+    next();
+  } catch (err) {
+    return res.status(500).json({ error: "Server error during authorization" });
   }
 };

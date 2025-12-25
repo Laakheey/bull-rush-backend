@@ -66,3 +66,16 @@ Thumbs.db
 __tests__/__snapshots__/
 test-results/
 playwright-report/
+
+NodejsApp1.njsproj
+NodejsApp1.njsproj.user
+NodejsApp1.sln
+
+contracts
+
+obj
+NodejsApp1
+bin
+.vs
+
+
