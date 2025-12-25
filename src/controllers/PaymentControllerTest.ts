@@ -26,12 +26,9 @@ import { sendUSDTToUser, verifyTxHashTest, verifyTxHashTestDev } from "../servic
 //     });
 // };
 
-
 export const initiatePaymentTest = async (req: Request, res: Response) => {
     const { amount, plan } = req.body;
     const userId = req.auth?.userId;
-
-    const IS_DEV_MODE = true;
 
     if (!userId) {
         return res.status(401).json({ error: "Unauthorized. Please sign in." });
@@ -62,8 +59,6 @@ export const initiatePaymentTest = async (req: Request, res: Response) => {
             return res.status(500).json({ error: "Failed to create request in database" });
         }
 
-        // 4. Return the data to Frontend
-        // Ensure ADMIN_BSC_ADDRESS is set in your .env for BEP20 payments
         res.json({
             requestId: data.id,
             adminAddress: process.env.ADMIN_TRON_ADDRESS, 
@@ -74,8 +69,6 @@ export const initiatePaymentTest = async (req: Request, res: Response) => {
         res.status(500).json({ error: "An unexpected error occurred" });
     }
 };
-
-
 
 // export const submitTxHashTest = async (req: Request, res: Response) => {
 //     const { requestId, txHash } = req.body;
@@ -109,7 +102,7 @@ export const submitTxHashTest = async (req: Request, res: Response) => {
     const { requestId, txHash } = req.body;
     const userId = req.auth?.userId;
 
-    const IS_DEV_MODE = true; 
+    const IS_DEV_MODE = false; 
 
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
@@ -136,7 +129,6 @@ export const submitTxHashTest = async (req: Request, res: Response) => {
         });
     }
 
-    // Handle errors
     return res.status(400).json({ 
         error: ("error" in result ? result.error : "Verification failed") 
     });
@@ -181,7 +173,6 @@ export const submitTxHashTest = async (req: Request, res: Response) => {
 // };
 
 export const cashOutTokensTest = async (req: Request, res: Response) => {
-    console.log("-----cashOutTokenTest");
   const { amount, walletAddress } = req.body;
     
   const userId = req.auth?.userId;
@@ -192,33 +183,29 @@ export const cashOutTokensTest = async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Invalid amount or address" });
   }
 
-  // Check balance
   const { data: user } = await supabase.from("users").select("token_balance").eq("id", userId).single();
   if (!user || Number(user.token_balance) < numAmount) {
     return res.status(400).json({ error: "Insufficient balance" });
   }
-  // Send USDT
+
   const txHash = await sendUSDTToUser(walletAddress, numAmount);
   if (!txHash) {
     return res.status(500).json({ error: "Failed to send USDT — contact support" });
   }
 
-  // Deduct tokens
   const newBalance = Number(user.token_balance) - numAmount;
   await supabase.from("users").update({ token_balance: newBalance }).eq("id", userId);
 
-  // LOG WITHDRAWAL IN DB
   const { error: logError } = await supabase.from("withdrawals").insert({
     user_id: userId,
     amount: numAmount,
     wallet_address: walletAddress,
     tx_hash: txHash,
-    status: "sent", // or "pending" if you want manual review
+    status: "sent",
   });
 
   if (logError) {
     console.error("Failed to log withdrawal:", logError);
-    // Don't fail the whole request — user already got USDT
   }
 
   res.json({ 

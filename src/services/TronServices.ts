@@ -1,7 +1,7 @@
 import axios from "axios";
 import { supabase } from "../config/SupabaseConfig";
 
-const IS_TESTNET = true;
+const IS_TESTNET = false;
 
 const TRONGRID_API_KEY = process.env.TRONGRID_API_KEY!;
 const ADMIN_TRON_ADDRESS = process.env.ADMIN_TRON_ADDRESS!;

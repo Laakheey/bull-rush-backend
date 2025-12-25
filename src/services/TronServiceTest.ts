@@ -311,7 +311,6 @@ export const sendUSDTToUser = async (
 
   try {
     const contract = await tronWebAdmin.contract().at(USDT_CONTRACT);
-    console.log("-----contract");
 
     // Amount in 6 decimals
     //const amountInSun = tronWebAdmin.toBigNumber(amount * 1_000_000);

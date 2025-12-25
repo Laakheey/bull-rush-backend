@@ -385,7 +385,6 @@ export class AdminController {
     res.json({ success: true });
   }
 
-  // Get list of all users who have sent support messages + summary
   static async getSupportChats(req: Request, res: Response) {
     try {
       const { data: adminUser, error: adminError } = await supabase
@@ -398,7 +397,6 @@ export class AdminController {
         return res.status(403).json({ error: "Admin access required" });
       }
 
-      // Get all distinct users who have messages in support_messages table
       const { data: chatUsers, error: usersError } = await supabase
         .from("support_messages")
         .select("user_id")
@@ -415,7 +413,6 @@ export class AdminController {
         return res.json({ chats: [] });
       }
 
-      // Fetch user profiles
       const { data: profiles, error: profileError } = await supabase
         .from("users")
         .select("id, email, first_name, last_name")
@@ -426,7 +423,6 @@ export class AdminController {
         return res.status(500).json({ error: "Failed to load user data" });
       }
 
-      // For each user, get last message and unread count
       const chats = await Promise.all(
         profiles.map(async (user) => {
           const { data: messages, error: msgError } = await supabase
@@ -445,13 +441,12 @@ export class AdminController {
             ? "Image"
             : lastMsg.content || "Media";
 
-          // Count unread messages (user messages not replied yet — simple heuristic)
           const { count: unreadCount } = await supabase
             .from("support_messages")
             .select("*", { count: "exact", head: true })
             .eq("user_id", user.id)
             .eq("is_admin_reply", false)
-            .is("read_at", null); // optional: add read_at column later for accuracy
+            .is("read_at", null);
 
           return {
             user_id: user.id,
@@ -468,7 +463,6 @@ export class AdminController {
 
       const validChats = chats.filter(Boolean);
 
-      // Sort by most recent message
       validChats.sort(
         (a, b) =>
           new Date(b!.last_message_time).getTime() -
@@ -482,7 +476,6 @@ export class AdminController {
     }
   }
 
-  // Get full message history for a specific user
   static async getUserChatMessages(req: Request, res: Response) {
     try {
       const { userId } = req.params;
@@ -515,7 +508,6 @@ export class AdminController {
     }
   }
 
-  // Send reply from admin
   static async sendAdminReply(req: Request, res: Response) {
     try {
       const { user_id, content, image_url } = req.body;
