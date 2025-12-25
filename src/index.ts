@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
@@ -20,27 +20,28 @@ const allowedOrigins = [
 
 const app = express();
 
-// ✅ CORS configuration
-const corsOptions = {
-  origin: function (origin: string | undefined, callback: any) {
-    // Allow requests with no origin (like mobile apps, Postman, or server-to-server)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log("❌ Blocked by CORS:", origin);
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  credentials: true,
-  optionsSuccessStatus: 204,
-};
-
-// ✅ Apply CORS globally
-app.use(cors(corsOptions));
+// ✅ Manual CORS middleware (more reliable)
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const origin = req.headers.origin;
+  
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  } else if (!origin) {
+    // Allow requests with no origin (Postman, server-to-server)
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
+  
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  
+  // Handle preflight
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+  
+  next();
+});
 
 // ✅ Body parser
 app.use(express.json());
@@ -58,13 +59,15 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/referral", referralRoutes);
 app.use("/api/withdrawal", withdrawalRoutes);
 
-// ✅ Error handler for CORS
-app.use((err: any, req: Request, res: Response, next: any) => {
-  if (err.message === "Not allowed by CORS") {
-    console.error("CORS Error:", req.headers.origin);
-    return res.status(403).json({ error: "CORS policy violation" });
-  }
-  next(err);
+// ✅ 404 handler
+app.use((req: Request, res: Response) => {
+  res.status(404).json({ error: "Route not found" });
+});
+
+// ✅ Error handler
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error("Server error:", err);
+  res.status(500).json({ error: "Internal server error" });
 });
 
 app.listen(PORT, () => {
