@@ -312,16 +312,14 @@ export const sendUSDTToUser = async (
   try {
     const contract = await tronWebAdmin.contract().at(USDT_CONTRACT);
 
-    // Amount in 6 decimals
-    //const amountInSun = tronWebAdmin.toBigNumber(amount * 1_000_000);
     const amountInSun = tronWebAdmin.BigNumber(amount * 1_000_000);
 
     const transaction = await contract.transfer(toAddress, amountInSun).send({
-      feeLimit: 40_000_000, // 40 TRX max fee
+      feeLimit: 40_000_000, 
     });
 
     console.log(`? Sent ${amount} USDT to ${toAddress} | Tx: ${transaction}`);
-    return transaction; // tx hash
+    return transaction;
   } catch (error: any) {
     console.error("USDT Send Error:", error);
     return null;
@@ -334,28 +332,23 @@ export const sendUSDTToUserTest = async (
   privateKey: string
 ): Promise<string | null> => {
   try {
-    // USDT TRC20 contract address on Tron mainnet
     const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
 
-    // Create contract instance
     const contract = await tronWeb.contract().at(USDT_CONTRACT);
 
-    // Amount in smallest unit (USDT has 6 decimals)
     const amountInSmallestUnit = amount * 1_000_000;
 
-    // Set private key for signing
     tronWeb.setPrivateKey(privateKey);
 
-    // Build and send transaction
     const transaction = await contract
       .transfer(toAddress, amountInSmallestUnit)
       .send({
-        feeLimit: 10_000_000, // 10 TRX max fee
+        feeLimit: 100_000_000, // 100 TRX max fee
         callValue: 0,
       });
 
     console.log("USDT sent successfully:", transaction);
-    return transaction; // This is the txID (hash)
+    return transaction;
   } catch (error: any) {
     console.error("Failed to send USDT:", error);
     if (error.message) console.error("Error message:", error.message);

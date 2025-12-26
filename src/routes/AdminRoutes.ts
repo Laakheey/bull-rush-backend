@@ -55,19 +55,13 @@ router.get('/search', AdminController.searchUsers);
 
 router.put('/users/:userId/balance', AdminController.updateUserBalance);
 
-// NEW: Toggle user active/suspend status
 router.put('/users/:userId/status', AdminController.toggleUserStatus);
 
-// GET /api/admin/users/:userId/transactions - Get user transaction history
 router.get('/users/:userId/transactions', AdminController.getUserTransactions);
 router.get('/stats', AdminController.getDashboardStats);
 
-// routes/admin.routes.ts (add these lines)
-
-router.get('/support/chats', AdminController.getSupportChats);           // List all user conversations
-router.get('/support/chat/:userId', AdminController.getUserChatMessages); // Get messages for one user
-router.post('/support/reply', AdminController.sendAdminReply);           // Send reply as admin
-// router.post('/support/upload', AdminController.uploadChatImage);         // Upload image (returns URL)
-
+router.get('/support/chats', AdminController.getSupportChats);
+router.get('/support/chat/:userId', AdminController.getUserChatMessages);
+router.post('/support/reply', AdminController.sendAdminReply);
 
 export default router;

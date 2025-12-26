@@ -43,7 +43,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
   
-  // Handle preflight
   if (req.method === "OPTIONS") {
     console.log("🔄 Handling OPTIONS preflight");
     return res.status(204).end();
@@ -52,10 +51,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// ✅ Body parser
 app.use(express.json());
 
-// ✅ Health check
 app.get("/", (req: Request, res: Response) => {
   res.json({ 
     status: "OK", 
@@ -73,20 +70,17 @@ app.get("/api/health", async (req: Request, res: Response) => {
   });
 });
 
-// ✅ Routes
 app.use("/api/payment", paymentRoute);
 app.use("/api/test/payment", paymentRouteTest);
 app.use("/api/admin", adminRoutes);
 app.use("/api/referral", referralRoutes);
 app.use("/api/withdrawal", withdrawalRoutes);
 
-// ✅ 404 handler
 app.use((req: Request, res: Response) => {
   console.log("❌ 404:", req.method, req.path);
   res.status(404).json({ error: "Route not found", path: req.path });
 });
 
-// ✅ Error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error("💥 Server error:", err);
   res.status(500).json({ error: "Internal server error", message: err.message });
