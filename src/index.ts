@@ -12,6 +12,7 @@ const allowedOrigins = [
   "https://bull-rush.vercel.app",
   "http://localhost:5173",
   "http://localhost:3000",
+  "https://shreex.com",
 ];
 
 const corsOptions = {
