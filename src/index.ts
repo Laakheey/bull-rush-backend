@@ -2,14 +2,14 @@ import express, { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
 dotenv.config();
 
-import paymentRoute from "./routes/PaymentRoutes";
+// import paymentRoute from "./routes/PaymentRoutes";
 import paymentRouteTest from "./routes/PaymentsRoutesTest";
 import adminRoutes from "./routes/AdminRoutes";
 import referralRoutes from "./routes/ReferralRoutes";
 import withdrawalRoutes from "./routes/WithdrawalRoutes";
 
-const PORT = process.env.PORT || 5008;
-console.log("🚀 Server starting on port:", PORT);
+const PORT = process.env.PORT1 || 5008;
+console.log("🚀 Server starting on port:", process.env.PORT1);
 
 const allowedOrigins = [
   "https://bull-rush.vercel.app",
@@ -70,7 +70,8 @@ app.get("/api/health", async (req: Request, res: Response) => {
   });
 });
 
-app.use("/api/payment", paymentRoute);
+// app.use("/api/payment", paymentRoute);
+
 app.use("/api/test/payment", paymentRouteTest);
 app.use("/api/admin", adminRoutes);
 app.use("/api/referral", referralRoutes);

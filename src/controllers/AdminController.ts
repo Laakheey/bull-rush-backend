@@ -548,41 +548,4 @@ export class AdminController {
       res.status(500).json({ error: "Internal server error" });
     }
   }
-
-  // Upload image for chat (simple Supabase storage upload)
-  //static async uploadChatImage(req: Request, res: Response) {
-  //  try {
-  //    if (!req.files || Object.keys(req.files).length === 0) {
-  //      return res.status(400).json({ error: "No image uploaded" });
-  //    }
-
-  //    const imageFile = req.files.image as any;
-  //    const fileExt = imageFile.name.split(".").pop();
-  //    const fileName = `chat/${Date.now()}_${Math.random()
-  //      .toString(36)
-  //      .substring(7)}.${fileExt}`;
-
-  //    const { data, error } = await supabase.storage
-  //      .from("chat-images") // Make sure this bucket exists and is public or has proper policy
-  //      .upload(fileName, imageFile.data, {
-  //        contentType: imageFile.mimetype,
-  //        upsert: false,
-  //      });
-
-  //    if (error) {
-  //      console.error("Storage upload error:", error);
-  //      return res.status(500).json({ error: "Image upload failed" });
-  //    }
-
-  //    const { data: publicUrlData } = supabase.storage
-  //      .from("chat-images")
-  //      .getPublicUrl(fileName);
-
-  //    res.json({ image_url: publicUrlData.publicUrl });
-  //  } catch (error: any) {
-  //    console.error("Error uploading chat image:", error);
-  //    res.status(500).json({ error: "Upload failed" });
-  //  }
-  //}
-
 }

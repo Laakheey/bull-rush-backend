@@ -14,7 +14,7 @@ router.post("/request", clerkMiddleware, WithdrawalController.requestWithdrawal)
 router.get("/withdrawals", clerkMiddleware, adminOnly, WithdrawalController.getWithdrawals);
 router.get("/wallets", clerkMiddleware, adminOnly, WithdrawalController.getPayoutWallets);
 router.post("/process", clerkMiddleware, adminOnly, WithdrawalController.processWithdrawal);
-// addPayoutWallet
+
 router.post('/wallets', clerkMiddleware, adminOnly, WithdrawalController.addPayoutWallet)
 
 export default router;

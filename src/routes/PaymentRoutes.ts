@@ -1,17 +1,17 @@
-import express from 'express';
-import { initiatePayment, verifyPayment, verifyPayment1 } from '../controllers/PaymentController';
-import { clerkMiddleware } from '../middleware/Middleware';
+// import express from 'express';
+// import { initiatePayment, verifyPayment, verifyPayment1 } from '../controllers/PaymentController';
+// import { clerkMiddleware } from '../middleware/Middleware';
 
-const router = express.Router();
+// const router = express.Router();
 
-router.get('/', verifyPayment1);
+// router.get('/', verifyPayment1);
 
-router.post('/initiate', clerkMiddleware, initiatePayment);
-router.post('/verify', clerkMiddleware, verifyPayment);
+// router.post('/initiate', clerkMiddleware, initiatePayment);
+// router.post('/verify', clerkMiddleware, verifyPayment);
 
-router.get("/test", (_, res) => {
-  res.json({ msg: "Router is definitely connected" });
-});
+// router.get("/test", (_, res) => {
+//   res.json({ msg: "Router is definitely connected" });
+// });
 
 
-export default router;
+// export default router;

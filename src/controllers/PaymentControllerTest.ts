@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import { supabase } from "../config/SupabaseConfig";
-import { sendUSDTToUser, verifyTxHashTest, verifyTxHashTestDev } from "../services/TronServiceTest";
+import {
+  verifyTxHashTest,
+  verifyTxHashTestDev,
+} from "../services/TronServiceTest";
 
 // export const initiatePaymentTest = async (req: Request, res: Response) => {
 //     const { amount } = req.body;
@@ -27,47 +30,48 @@ import { sendUSDTToUser, verifyTxHashTest, verifyTxHashTestDev } from "../servic
 // };
 
 export const initiatePaymentTest = async (req: Request, res: Response) => {
-    const { amount, plan } = req.body;
-    const userId = req.auth?.userId;
+  const { amount, plan } = req.body;
+  const userId = req.auth?.userId;
 
-    if (!userId) {
-        return res.status(401).json({ error: "Unauthorized. Please sign in." });
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized. Please sign in." });
+  }
+
+  if (!amount || Number(amount) < 10) {
+    return res.status(400).json({ error: "Minimum investment is 10 USDT" });
+  }
+
+  const validPlans = ["monthly", "half-yearly", "yearly"];
+  const selectedPlan = validPlans.includes(plan) ? plan : "monthly";
+
+  try {
+    const { data, error } = await supabase
+      .from("token_requests")
+      .insert({
+        user_id: userId,
+        amount_usdt: Number(amount),
+        plan_type: selectedPlan,
+        status: "pending",
+        expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase Error:", error);
+      return res
+        .status(500)
+        .json({ error: "Failed to create request in database" });
     }
 
-    if (!amount || Number(amount) < 10) {
-        return res.status(400).json({ error: "Minimum investment is 10 USDT" });
-    }
-
-    const validPlans = ["monthly", "half-yearly", "yearly"];
-    const selectedPlan = validPlans.includes(plan) ? plan : "monthly";
-
-    try {
-        const { data, error } = await supabase
-            .from("token_requests")
-            .insert({
-                user_id: userId,
-                amount_usdt: Number(amount),
-                plan_type: selectedPlan,
-                status: "pending",
-                expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-            })
-            .select()
-            .single();
-
-        if (error) {
-            console.error("Supabase Error:", error);
-            return res.status(500).json({ error: "Failed to create request in database" });
-        }
-
-        res.json({
-            requestId: data.id,
-            adminAddress: process.env.ADMIN_TRON_ADDRESS, 
-        });
-
-    } catch (err) {
-        console.error("Internal Server Error:", err);
-        res.status(500).json({ error: "An unexpected error occurred" });
-    }
+    res.json({
+      requestId: data.id,
+      adminAddress: process.env.ADMIN_TRON_ADDRESS,
+    });
+  } catch (err) {
+    console.error("Internal Server Error:", err);
+    res.status(500).json({ error: "An unexpected error occurred" });
+  }
 };
 
 // export const submitTxHashTest = async (req: Request, res: Response) => {
@@ -99,39 +103,40 @@ export const initiatePaymentTest = async (req: Request, res: Response) => {
 // };
 
 export const submitTxHashTest = async (req: Request, res: Response) => {
-    const { requestId, txHash } = req.body;
-    const userId = req.auth?.userId;
+  const { requestId, txHash } = req.body;
+  const userId = req.auth?.userId;
 
-    const IS_DEV_MODE = false; 
+  const IS_TESTNET = false;
 
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    const { data: request } = await supabase
-        .from("token_requests")
-        .select("id, user_id, status")
-        .eq("id", requestId)
-        .eq("user_id", userId)
-        .single();
+  const { data: request } = await supabase
+    .from("token_requests")
+    .select("id, user_id, status")
+    .eq("id", requestId)
+    .eq("user_id", userId)
+    .single();
 
-    if (!request) return res.status(404).json({ error: "Request not found" });
-    if (request.status !== "pending") return res.status(400).json({ error: "Already processed" });
+  if (!request) return res.status(404).json({ error: "Request not found" });
+  if (request.status !== "pending")
+    return res.status(400).json({ error: "Already processed" });
 
-    const result = IS_DEV_MODE 
-        ? await verifyTxHashTestDev(requestId, txHash)
-        : await verifyTxHashTest(requestId, txHash);
+  const result = IS_TESTNET
+    ? await verifyTxHashTestDev(requestId, txHash)
+    : await verifyTxHashTest(requestId, txHash);
 
-    if (result.status === "approved" && "amount" in result) {
-        return res.json({ 
-            success: true, 
-            tokensAdded: result.amount, 
-            plan: result.plan,
-            mode: IS_DEV_MODE ? "development" : "live" 
-        });
-    }
-
-    return res.status(400).json({ 
-        error: ("error" in result ? result.error : "Verification failed") 
+  if (result.status === "approved" && "amount" in result) {
+    return res.json({
+      success: true,
+      tokensAdded: result.amount,
+      plan: result.plan,
+      mode: IS_TESTNET ? "development" : "live",
     });
+  }
+
+  return res.status(400).json({
+    error: "error" in result ? result.error : "Verification failed",
+  });
 };
 
 // export const cashOutTokensTest = async (req: Request, res: Response) => {
@@ -172,45 +177,58 @@ export const submitTxHashTest = async (req: Request, res: Response) => {
 //   res.json({ success: true, txHash, message: `Sent ${amount} USDT to ${walletAddress}` });
 // };
 
-export const cashOutTokensTest = async (req: Request, res: Response) => {
-  const { amount, walletAddress } = req.body;
-    
-  const userId = req.auth?.userId;
-  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+// export const cashOutTokensTest = async (req: Request, res: Response) => {
+//   const { amount, walletAddress } = req.body;
 
-  const numAmount = Number(amount);
-  if (numAmount <= 0 || !walletAddress || !/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(walletAddress)) {
-    return res.status(400).json({ error: "Invalid amount or address" });
-  }
+//   const userId = req.auth?.userId;
+//   if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-  const { data: user } = await supabase.from("users").select("token_balance").eq("id", userId).single();
-  if (!user || Number(user.token_balance) < numAmount) {
-    return res.status(400).json({ error: "Insufficient balance" });
-  }
+//   const numAmount = Number(amount);
+//   if (
+//     numAmount <= 0 ||
+//     !walletAddress ||
+//     !/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(walletAddress)
+//   ) {
+//     return res.status(400).json({ error: "Invalid amount or address" });
+//   }
 
-  const txHash = await sendUSDTToUser(walletAddress, numAmount);
-  if (!txHash) {
-    return res.status(500).json({ error: "Failed to send USDT — contact support" });
-  }
+//   const { data: user } = await supabase
+//     .from("users")
+//     .select("token_balance")
+//     .eq("id", userId)
+//     .single();
+//   if (!user || Number(user.token_balance) < numAmount) {
+//     return res.status(400).json({ error: "Insufficient balance" });
+//   }
 
-  const newBalance = Number(user.token_balance) - numAmount;
-  await supabase.from("users").update({ token_balance: newBalance }).eq("id", userId);
+//   const txHash = await sendUSDTToUser(walletAddress, numAmount);
+//   if (!txHash) {
+//     return res
+//       .status(500)
+//       .json({ error: "Failed to send USDT — contact support" });
+//   }
 
-  const { error: logError } = await supabase.from("withdrawals").insert({
-    user_id: userId,
-    amount: numAmount,
-    wallet_address: walletAddress,
-    tx_hash: txHash,
-    status: "sent",
-  });
+//   const newBalance = Number(user.token_balance) - numAmount;
+//   await supabase
+//     .from("users")
+//     .update({ token_balance: newBalance })
+//     .eq("id", userId);
 
-  if (logError) {
-    console.error("Failed to log withdrawal:", logError);
-  }
+//   const { error: logError } = await supabase.from("withdrawals").insert({
+//     user_id: userId,
+//     amount: numAmount,
+//     wallet_address: walletAddress,
+//     tx_hash: txHash,
+//     status: "sent",
+//   });
 
-  res.json({ 
-    success: true, 
-    txHash, 
-    message: `Successfully sent ${numAmount} USDT!` 
-  });
-};
+//   if (logError) {
+//     console.error("Failed to log withdrawal:", logError);
+//   }
+
+//   res.json({
+//     success: true,
+//     txHash,
+//     message: `Successfully sent ${numAmount} USDT!`,
+//   });
+// };
