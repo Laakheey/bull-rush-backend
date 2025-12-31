@@ -5,30 +5,6 @@ import {
   verifyTxHashTestDev,
 } from "../services/TronServiceTest";
 
-// export const initiatePaymentTest = async (req: Request, res: Response) => {
-//     const { amount } = req.body;
-//     const userId = req.auth?.userId;
-//     if (!userId) return res.status(401).json({ error: "Unauthorized" });
-
-//     const { data, error } = await supabase
-//         .from("token_requests")
-//         .insert({
-//             user_id: userId,
-//             amount_usdt: amount || null,
-//             status: "pending",
-//             expires_at: new Date(Date.now() + 30 * 60 * 1000),
-//         })
-//         .select()
-//         .single();
-
-//     if (error) return res.status(500).json({ error: "DB Error" });
-
-//     res.json({
-//         requestId: data.id,
-//         adminAddress: process.env.ADMIN_TRON_ADDRESS,
-//     });
-// };
-
 export const initiatePaymentTest = async (req: Request, res: Response) => {
   const { amount, plan } = req.body;
   const userId = req.auth?.userId;
@@ -74,34 +50,6 @@ export const initiatePaymentTest = async (req: Request, res: Response) => {
   }
 };
 
-// export const submitTxHashTest = async (req: Request, res: Response) => {
-//     const { requestId, txHash } = req.body;
-//     const userId = req.auth?.userId;
-//     if (!userId) return res.status(401).json({ error: "Unauthorized" });
-
-//     const { data: request } = await supabase
-//         .from("token_requests")
-//         .select("id, user_id, status")
-//         .eq("id", requestId)
-//         .eq("user_id", userId)
-//         .single();
-
-//     if (!request) return res.status(404).json({ error: "Request not found" });
-//     if (request.status !== "pending") return res.status(400).json({ error: "Already processed" });
-
-//     if (!/^[a-fA-F0-9]{64}$/.test(txHash)) {
-//         return res.status(400).json({ error: "Invalid transaction hash" });
-//     }
-
-//     const result = await verifyTxHashTest(requestId, txHash);
-
-//     if (result.status === "approved") {
-//         return res.json({ success: true, tokensAdded: result.amount });
-//     }
-
-//     return res.status(400).json({ error: result.error || "Verification failed" });
-// };
-
 export const submitTxHashTest = async (req: Request, res: Response) => {
   const { requestId, txHash } = req.body;
   const userId = req.auth?.userId;
@@ -138,6 +86,35 @@ export const submitTxHashTest = async (req: Request, res: Response) => {
     error: "error" in result ? result.error : "Verification failed",
   });
 };
+
+// export const submitTxHashTest = async (req: Request, res: Response) => {
+//     const { requestId, txHash } = req.body;
+//     const userId = req.auth?.userId;
+//     if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+//     const { data: request } = await supabase
+//         .from("token_requests")
+//         .select("id, user_id, status")
+//         .eq("id", requestId)
+//         .eq("user_id", userId)
+//         .single();
+
+//     if (!request) return res.status(404).json({ error: "Request not found" });
+//     if (request.status !== "pending") return res.status(400).json({ error: "Already processed" });
+
+//     if (!/^[a-fA-F0-9]{64}$/.test(txHash)) {
+//         return res.status(400).json({ error: "Invalid transaction hash" });
+//     }
+
+//     const result = await verifyTxHashTest(requestId, txHash);
+
+//     if (result.status === "approved") {
+//         return res.json({ success: true, tokensAdded: result.amount });
+//     }
+
+//     return res.status(400).json({ error: result.error || "Verification failed" });
+// };
+
 
 // export const cashOutTokensTest = async (req: Request, res: Response) => {
 //   const { amount, walletAddress } = req.body;
@@ -186,8 +163,8 @@ export const submitTxHashTest = async (req: Request, res: Response) => {
 //   const numAmount = Number(amount);
 //   if (
 //     numAmount <= 0 ||
-//     !walletAddress ||
-//     !/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(walletAddress)
+//?     !walletAddress ||
+//?     !/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(walletAddress)
 //   ) {
 //     return res.status(400).json({ error: "Invalid amount or address" });
 //   }
@@ -231,4 +208,33 @@ export const submitTxHashTest = async (req: Request, res: Response) => {
 //     txHash,
 //     message: `Successfully sent ${numAmount} USDT!`,
 //   });
+// };
+
+
+
+
+
+
+// export const initiatePaymentTest = async (req: Request, res: Response) => {
+//     const { amount } = req.body;
+//     const userId = req.auth?.userId;
+//     if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+//     const { data, error } = await supabase
+//         .from("token_requests")
+//         .insert({
+//             user_id: userId,
+//             amount_usdt: amount || null,
+//             status: "pending",
+//             expires_at: new Date(Date.now() + 30 * 60 * 1000),
+//         })
+//         .select()
+//         .single();
+
+//     if (error) return res.status(500).json({ error: "DB Error" });
+
+//     res.json({
+//         requestId: data.id,
+//         adminAddress: process.env.ADMIN_TRON_ADDRESS,
+//     });
 // };

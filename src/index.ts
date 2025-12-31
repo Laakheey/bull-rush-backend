@@ -58,6 +58,7 @@ app.use("/api/test/payment", paymentRouteTest);
 app.use("/api/admin", adminRoutes);
 app.use("/api/referral", referralRoutes);
 app.use("/api/withdrawal", withdrawalRoutes);
+app.use("/api/webhooks/clerk", require("./webhooks/ClerkWebhooks").handleClerkWebhook);
 
 app.all("{*path}", (req: Request, res: Response) => {
   console.log("404:", req.method, req.originalUrl);

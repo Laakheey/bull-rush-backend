@@ -548,4 +548,18 @@ export class AdminController {
       res.status(500).json({ error: "Internal server error" });
     }
   }
+
+  static async getAdminStats(req: any, res: any) {
+    try {
+      const { data, error } = await supabase
+        .from("admin_earnings_dashboard")
+        .select("*")
+        .single();
+
+      if (error) throw error;
+      return res.status(200).json(data);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
 }

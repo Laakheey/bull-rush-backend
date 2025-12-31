@@ -64,4 +64,6 @@ router.get('/support/chats', AdminController.getSupportChats);
 router.get('/support/chat/:userId', AdminController.getUserChatMessages);
 router.post('/support/reply', AdminController.sendAdminReply);
 
+router.get('/earning/stats', AdminController.getAdminStats);
+
 export default router;
