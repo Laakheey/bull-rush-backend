@@ -90,44 +90,50 @@ export const handleClerkWebhook = async (req: Request, res: Response) => {
   const { id } = evt.data;
   const eventType = evt.type;
 
+  // ⚠️ MIGRATION MODE: Skip user.created - let frontend handle it
+  if (eventType === 'user.created') {
+    console.log(`⏭️ [MIGRATION MODE] Skipping user.created for ${id}`);
+    return res.status(200).json({ 
+      received: true, 
+      note: 'User creation handled by frontend during migration' 
+    });
+  }
+
+  // Handle user updates (optional - keeps names in sync)
+  if (eventType === 'user.updated') {
+    const { email_addresses, first_name, last_name } = evt.data;
+    const email = email_addresses?.[0]?.email_address;
+    
+    if (email) {
+      await supabaseAdmin
+        .from('users')
+        .update({ 
+          first_name: first_name || undefined, 
+          last_name: last_name || undefined 
+        })
+        .eq('email', email);
+      
+      console.log(`✅ User updated: ${email}`);
+    }
+  }
+
+  // Handle user deletion
   if (eventType === 'user.deleted') {
     console.log(`🗑️ Starting deletion for user: ${id}`);
 
     try {
-      // Delete in reverse order of dependencies
-      // (child records first, then parent)
-
-      // 1. Delete token_requests
+      // Delete child records first
       await supabaseAdmin.from('token_requests').delete().eq('user_id', id);
-      console.log('✅ token_requests deleted');
-
-      // 2. Delete investments
       await supabaseAdmin.from('investments').delete().eq('user_id', id);
-      console.log('✅ investments deleted');
-
-      // 3. Delete withdrawals
       await supabaseAdmin.from('withdrawals').delete().eq('user_id', id);
-      console.log('✅ withdrawals deleted');
-
-      // 4. Delete user_monthly_performance
       await supabaseAdmin.from('user_monthly_performance').delete().eq('user_id', id);
-      console.log('✅ user_monthly_performance deleted');
-
-      // 5. Delete referrals (both referrer and referred)
       await supabaseAdmin.from('referrals').delete().eq('referrer_id', id);
       await supabaseAdmin.from('referrals').delete().eq('referred_id', id);
-      console.log('✅ referrals deleted');
-
-      // 6. Delete referral_bonuses (both referrer and referred)
       await supabaseAdmin.from('referral_bonuses').delete().eq('referrer_id', id);
       await supabaseAdmin.from('referral_bonuses').delete().eq('referred_user_id', id);
-      console.log('✅ referral_bonuses deleted');
-
-      // 7. Update users who were referred by this user (set referrer_id to null)
       await supabaseAdmin.from('users').update({ referrer_id: null }).eq('referrer_id', id);
-      console.log('✅ referrer_id references nullified');
 
-      // 8. Finally, delete the user
+      // Delete the user
       const { error } = await supabaseAdmin.from('users').delete().eq('id', id);
 
       if (error) {
