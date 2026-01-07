@@ -189,6 +189,7 @@ export const adminOnly = async (
       console.log("❌ User is not admin");
       return res.status(403).json({ error: "Access denied. Admins only" });
     }
+    console.log("🔍 Is User Admin:", user);
 
     console.log("✅ Admin check passed");
     next();
