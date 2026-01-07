@@ -17,39 +17,53 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: (origin: string | undefined, callback: Function) => {
+    console.log("🌐 CORS check for origin:", origin); // Debug log
+    
     if (!origin) return callback(null, true); 
+    
     let originHost;
     try {
       originHost = new URL(origin).hostname;
     } catch {
+      console.log("❌ Invalid origin URL:", origin);
       return callback(new Error("Not allowed by CORS"));
     }
 
     const allowed =
       originHost === "bull-rush.vercel.app" ||
       originHost.endsWith(".shreex.com") ||
-      originHost === "shreex.com" ||  // Added explicit check
+      originHost === "shreex.com" ||
       originHost === "localhost";
 
     if (allowed) {
+      console.log("✅ CORS allowed for:", origin);
       callback(null, true);
     } else {
-      console.log("Blocked origin:", origin);
+      console.log("❌ CORS blocked for:", origin);
       callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 const app = express();
 
-// Handle preflight for all routes - BEFORE other middleware
-app.options("*", cors(corsOptions));
-
+// CRITICAL: Apply CORS to ALL requests first
 app.use(cors(corsOptions));
 
+// Handle preflight explicitly
+app.options("*", cors(corsOptions));
+
 app.use(express.json({ limit: "10mb" }));
+
+// Add request logger
+app.use((req: Request, res: Response, next: NextFunction) => {
+  console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+  next();
+});
 
 app.get("/", (req: Request, res: Response) => {
   res.json({
@@ -85,8 +99,16 @@ app.all("*", (req: Request, res: Response) => {
   });
 });
 
+// CRITICAL: Error handler must set CORS headers
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error("Server error:", err);
+  console.error("❌ Server error:", err.message);
+  
+  // Ensure CORS headers are set even on error
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
 
   if (err.message === "Not allowed by CORS") {
     return res.status(403).json({ error: "CORS policy: Origin not allowed" });
@@ -96,7 +118,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     return res.status(400).json({ error: "Invalid URL path parameter" });
   }
 
-  res.status(500).json({ error: "Internal server error" });
+  res.status(500).json({ error: "Internal server error", message: err.message });
 });
 
 const PORT = process.env.PORT || 5008;
