@@ -17,7 +17,7 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: (origin: string | undefined, callback: Function) => {
-    console.log("🌐 CORS check for origin:", origin); // Debug log
+    console.log("🌐 CORS check for origin:", origin);
     
     if (!origin) return callback(null, true); 
     
@@ -45,17 +45,14 @@ const corsOptions = {
   },
   credentials: true,
   optionsSuccessStatus: 200,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 const app = express();
 
-// CRITICAL: Apply CORS to ALL requests first
+// CORS middleware handles all requests including OPTIONS
 app.use(cors(corsOptions));
-
-// Handle preflight explicitly
-app.options("*", cors(corsOptions));
 
 app.use(express.json({ limit: "10mb" }));
 
@@ -91,7 +88,8 @@ app.use(
   require("./webhooks/ClerkWebhooks").handleClerkWebhook
 );
 
-app.all("*", (req: Request, res: Response) => {
+// 404 handler
+app.use((req: Request, res: Response) => {
   console.log("404:", req.method, req.originalUrl);
   res.status(404).json({
     error: "Route not found",
@@ -99,7 +97,7 @@ app.all("*", (req: Request, res: Response) => {
   });
 });
 
-// CRITICAL: Error handler must set CORS headers
+// Error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error("❌ Server error:", err.message);
   
