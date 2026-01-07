@@ -13,14 +13,17 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "https://shreex.com",
+  "http://shreex.com",
+  "shreex.com",
+  /\.shreex\.com$/,
 ];
 
 const corsOptions = {
   origin: (origin: string | undefined, callback: Function) => {
     console.log("🌐 CORS check for origin:", origin);
-    
-    if (!origin) return callback(null, true); 
-    
+
+    if (!origin) return callback(null, true);
+
     let originHost;
     try {
       originHost = new URL(origin).hostname;
@@ -45,8 +48,8 @@ const corsOptions = {
   },
   credentials: true,
   optionsSuccessStatus: 200,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 const app = express();
@@ -100,12 +103,12 @@ app.use((req: Request, res: Response) => {
 // Error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error("❌ Server error:", err.message);
-  
+
   // Ensure CORS headers are set even on error
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Access-Control-Allow-Credentials", "true");
   }
 
   if (err.message === "Not allowed by CORS") {
@@ -116,7 +119,9 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     return res.status(400).json({ error: "Invalid URL path parameter" });
   }
 
-  res.status(500).json({ error: "Internal server error", message: err.message });
+  res
+    .status(500)
+    .json({ error: "Internal server error", message: err.message });
 });
 
 const PORT = process.env.PORT || 5008;
