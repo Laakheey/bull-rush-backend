@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/SupabaseWebhookConfig";
 
 export const handleClerkWebhook = async (req: Request, res: Response) => {  
-  const WEBHOOK_SECRET = process.env.CLERK_WEBHOOKe_SECRET_DEV!;
+  const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET_DEV!;
   
   if (!WEBHOOK_SECRET) {
     console.error("❌ CLERK_WEBHOOK_SECRET_DEV is not set");
