@@ -15,6 +15,7 @@ const allowedOrigins = [
   "https://shreex.com",
   "http://shreex.com",
   "shreex.com",
+  "https://spirometrical-janean-unserviceably.ngrok-free.dev",
   /\.shreex\.com$/,
 ];
 
