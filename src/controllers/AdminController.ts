@@ -36,7 +36,7 @@ export class AdminController {
           "❌ User is not admin:",
           req.auth?.userId,
           "is_admin:",
-          adminUser?.is_admin
+          adminUser?.is_admin,
         );
         return res.status(403).json({ error: "Admin access required" });
       }
@@ -47,7 +47,7 @@ export class AdminController {
         .from("users")
         .select(
           "id, email, first_name, last_name, token_balance, created_at, is_admin",
-          { count: "exact" }
+          { count: "exact" },
         )
         .order("token_balance", { ascending: false })
         .range(from, to);
@@ -117,7 +117,7 @@ export class AdminController {
       console.log(
         `📊 Balance change: ${oldBalance} → ${newBalance} (${
           difference >= 0 ? "+" : ""
-        }${difference})`
+        }${difference})`,
       );
 
       const { error: updateError } = await supabase
@@ -239,7 +239,7 @@ export class AdminController {
         })),
       ].sort(
         (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       );
 
       console.log(`✅ Fetched ${allTransactions.length} total transactions`);
@@ -286,7 +286,7 @@ export class AdminController {
       const totalTokens =
         tokenData?.reduce(
           (sum, user) => sum + Number(user.token_balance || 0),
-          0
+          0,
         ) || 0;
 
       // Get pending token requests (last 24h)
@@ -347,7 +347,7 @@ export class AdminController {
         .from("users")
         .select("id, email, first_name, last_name, token_balance, created_at")
         .or(
-          `email.ilike.%${query}%,first_name.ilike.%${query}%,last_name.ilike.%${query}%`
+          `email.ilike.%${query}%,first_name.ilike.%${query}%,last_name.ilike.%${query}%`,
         )
         .limit(limit);
 
@@ -458,7 +458,7 @@ export class AdminController {
             last_message_time: lastMsg.created_at,
             unread_count: unreadCount || 0,
           };
-        })
+        }),
       );
 
       const validChats = chats.filter(Boolean);
@@ -466,7 +466,7 @@ export class AdminController {
       validChats.sort(
         (a, b) =>
           new Date(b!.last_message_time).getTime() -
-          new Date(a!.last_message_time).getTime()
+          new Date(a!.last_message_time).getTime(),
       );
 
       res.json({ chats: validChats });
@@ -557,6 +557,24 @@ export class AdminController {
         .single();
 
       if (error) throw error;
+      return res.status(200).json(data);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+
+  static async updateUserLeaderStatus(req: any, res: any) {
+    try {
+      const { userId } = req.params;
+      const { is_leader } = req.body;
+
+      const { data, error } = await supabase
+        .from("users")
+        .update({ is_leader: is_leader })
+        .eq("id", userId)
+        .select();
+
+      if (error) return res.status(500).json({ error: error.message });
       return res.status(200).json(data);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });

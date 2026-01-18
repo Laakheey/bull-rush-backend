@@ -66,4 +66,7 @@ router.post('/support/reply', AdminController.sendAdminReply);
 
 router.get('/earning/stats', AdminController.getAdminStats);
 
+router.put('/users/:userId/updateUserLeaderStatus', AdminController.updateUserLeaderStatus);
+
+
 export default router;
